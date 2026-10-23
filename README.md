@@ -24,7 +24,7 @@ composer config repositories.drupal_json_ld vcs https://github.com/Mmitekk/Drupa
 
 2. Установите релизную версию модуля:
 ```bash
-composer require mitekk/staler-jsonld:^1.0
+composer require mmitekk/staler-jsonld:^1.0
 ```
 
 3. Включите модуль с помощью Drush:
@@ -63,7 +63,7 @@ composer config repositories.drupal_json_ld vcs https://github.com/Mmitekk/Drupa
 
 2. Require the release version via Composer:
 ```bash
-composer require mitekk/staler-jsonld:^1.0
+composer require mmitekk/staler-jsonld:^1.0
 ```
 
 3. Enable the module via Drush:
