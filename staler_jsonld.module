@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Contains staler_jsonld.module hooks.
+ */
+
+/**
+ * Implements hook_page_attachments().
+ */
+function staler_jsonld_page_attachments(array &$attachments) {
+  $generator = \Drupal::service('staler_jsonld.generator');
+  $snippets = $generator->generate();
+
+  foreach ($snippets as $index => $data) {
+    $json = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    if ($json) {
+      $attachments['#attached']['html_head'][] = [
+        [
+          '#tag' => 'script',
+          '#attributes' => [
+            'type' => 'application/ld+json',
+          ],
+          '#value' => $json,
+        ],
+        'staler_jsonld_' . $index,
+      ];
+    }
+  }
+}

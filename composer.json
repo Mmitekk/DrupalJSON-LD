@@ -1,0 +1,15 @@
+{
+    "name": "mitekk/staler-jsonld",
+    "description": "Comprehensive Schema.org JSON-LD structured data injector for Drupal 10 and 11 (Organization, LocalBusiness, WebSite, Product, Article, Breadcrumbs).",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Mmitekk",
+            "email": "mitish.n@yandex.ru"
+        }
+    ],
+    "require": {
+        "drupal/core": "^10 || ^11"
+    }
+}

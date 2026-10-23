@@ -1,0 +1,6 @@
+staler_jsonld.settings:
+  title: 'Staler JSON-LD'
+  description: 'Configure Schema.org JSON-LD structured data for organization, products, articles, and pages.'
+  parent: system.admin_config_search
+  route_name: staler_jsonld.settings
+  weight: 100

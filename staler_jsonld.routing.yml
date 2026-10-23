@@ -1,0 +1,7 @@
+staler_jsonld.settings:
+  path: '/admin/config/search/staler-jsonld'
+  defaults:
+    _form: '\Drupal\staler_jsonld\Form\StalerJsonLdSettingsForm'
+    _title: 'Staler JSON-LD Settings'
+  requirements:
+    _permission: 'administer site configuration'

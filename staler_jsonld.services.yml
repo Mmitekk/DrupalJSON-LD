@@ -1,0 +1,4 @@
+services:
+  staler_jsonld.generator:
+    class: Drupal\staler_jsonld\Service\JsonLdGenerator
+    arguments: ['@current_route_match', '@entity_type.manager', '@request_stack', '@config.factory']
