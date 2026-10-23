@@ -143,6 +143,7 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
 
     $form['product'] = [
       '#type' => 'details',
+      '#tree' => TRUE,
       '#title' => $this->t('Product & Offer Settings (Nodes)'),
       '#description' => $this->t('Enable the content types that should get Product JSON-LD and pick their fields. A separate block is shown for every content type.'),
       '#open' => TRUE,
@@ -154,7 +155,7 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('enable_product') ?? TRUE,
     ];
 
-    $form['product']['mappings'] = [
+    $form['product']['product_mappings'] = [
       '#type' => 'container',
       '#tree' => TRUE,
     ];
@@ -164,40 +165,40 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
       $stored = $product_mappings[$machine] ?? [];
       $enabled = !empty($stored['enabled']);
 
-      $form['product']['mappings'][$machine] = [
+      $form['product']['product_mappings'][$machine] = [
         '#type' => 'details',
         '#title' => $info['label'] . ' (' . $machine . ')',
         '#open' => $enabled,
       ];
 
-      $form['product']['mappings'][$machine]['enabled'] = [
+      $form['product']['product_mappings'][$machine]['enabled'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Enable Product JSON-LD for this content type'),
         '#default_value' => $enabled,
       ];
 
-      $form['product']['mappings'][$machine]['description'] = [
+      $form['product']['product_mappings'][$machine]['description'] = [
         '#type' => 'select',
         '#title' => $this->t('Description field (JSON-LD "description")'),
         '#options' => $fields,
         '#default_value' => $this->storedOption($fields, $stored['description'] ?? '', ''),
       ];
 
-      $form['product']['mappings'][$machine]['price'] = [
+      $form['product']['product_mappings'][$machine]['price'] = [
         '#type' => 'select',
         '#title' => $this->t('Price field (JSON-LD "price")'),
         '#options' => $fields,
         '#default_value' => $this->storedOption($fields, $stored['price'] ?? '', ''),
       ];
 
-      $form['product']['mappings'][$machine]['sku'] = [
+      $form['product']['product_mappings'][$machine]['sku'] = [
         '#type' => 'select',
         '#title' => $this->t('SKU field (JSON-LD "sku")'),
         '#options' => $fields,
         '#default_value' => $this->storedOption($fields, $stored['sku'] ?? '', ''),
       ];
 
-      $form['product']['mappings'][$machine]['image'] = [
+      $form['product']['product_mappings'][$machine]['image'] = [
         '#type' => 'select',
         '#title' => $this->t('Image field (JSON-LD "image")'),
         '#options' => $fields,
@@ -209,6 +210,7 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
 
     $form['article'] = [
       '#type' => 'details',
+      '#tree' => TRUE,
       '#title' => $this->t('Article Settings'),
       '#description' => $this->t('Enable the content types that should get Article JSON-LD and pick their fields.'),
       '#open' => TRUE,
@@ -220,7 +222,7 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('enable_article') ?? TRUE,
     ];
 
-    $form['article']['mappings'] = [
+    $form['article']['article_mappings'] = [
       '#type' => 'container',
       '#tree' => TRUE,
     ];
@@ -230,26 +232,26 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
       $stored = $article_mappings[$machine] ?? [];
       $enabled = !empty($stored['enabled']);
 
-      $form['article']['mappings'][$machine] = [
+      $form['article']['article_mappings'][$machine] = [
         '#type' => 'details',
         '#title' => $info['label'] . ' (' . $machine . ')',
         '#open' => $enabled,
       ];
 
-      $form['article']['mappings'][$machine]['enabled'] = [
+      $form['article']['article_mappings'][$machine]['enabled'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Enable Article JSON-LD for this content type'),
         '#default_value' => $enabled,
       ];
 
-      $form['article']['mappings'][$machine]['image'] = [
+      $form['article']['article_mappings'][$machine]['image'] = [
         '#type' => 'select',
         '#title' => $this->t('Image field (JSON-LD "image")'),
         '#options' => $fields,
         '#default_value' => $this->storedOption($fields, $stored['image'] ?? '', ''),
       ];
 
-      $form['article']['mappings'][$machine]['author'] = [
+      $form['article']['article_mappings'][$machine]['author'] = [
         '#type' => 'select',
         '#title' => $this->t('Author field (JSON-LD "author.name")'),
         '#description' => $this->t('Text field with the author name. If empty, the organization name is used.'),
@@ -305,18 +307,32 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('staler_jsonld.settings');
-    $keys = [
+
+    $flat_keys = [
       'org_name', 'org_alt_name', 'org_url', 'org_logo', 'org_image',
       'org_phone', 'org_email', 'address_street', 'address_locality',
       'address_region', 'address_postal', 'address_country', 'opening_hours',
       'enable_website', 'search_url',
-      'enable_product', 'product_mappings',
-      'enable_article', 'article_mappings',
       'enable_breadcrumbs',
     ];
 
-    foreach ($keys as $key) {
+    foreach ($flat_keys as $key) {
       $config->set($key, $form_state->getValue($key));
+    }
+
+    // Product/Article sections are #tree'd: productMappings lives under
+    // values['product']['product_mappings'][bundle][...].
+    foreach (['product', 'article'] as $section) {
+      $values = $form_state->getValue($section) ?: [];
+      $config->set('enable_' . $section, !empty($values['enable_' . $section]));
+
+      $mappings = $values[$section . '_mappings'] ?? [];
+      foreach ($mappings as $bundle => $mapping) {
+        if (empty($mapping['enabled'])) {
+          unset($mappings[$bundle]);
+        }
+      }
+      $config->set($section . '_mappings', $mappings);
     }
 
     $config->save();
