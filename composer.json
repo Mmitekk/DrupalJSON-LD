@@ -1,5 +1,5 @@
 {
-    "name": "mitekk/staler-jsonld",
+    "name": "mmitekk/staler-jsonld",
     "type": "drupal-module",
     "description": "Comprehensive Schema.org JSON-LD structured data injector for Drupal 10 and 11 (Organization, LocalBusiness, WebSite, Product, Article, Breadcrumbs).",
     "keywords": [
@@ -31,7 +31,7 @@
     },
     "extra": {
         "drupal": {
-            "packageName": "mitekk/staler-jsonld",
+            "packageName": "mmitekk/staler-jsonld",
             "version": "1.0.0",
             "security-coverage": {
                 "status": "not-covered",
