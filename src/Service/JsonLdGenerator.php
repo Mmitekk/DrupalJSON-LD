@@ -5,6 +5,7 @@ namespace Drupal\staler_jsonld\Service;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -41,7 +42,7 @@ class JsonLdGenerator {
 
     $org_id = ($config->get('org_url') ?: 'https://www.stalerplast.ru/') . '#organization';
 
-    // 1. Organization & LocalBusiness (site-wide or front page)
+    // 1. Organization & LocalBusiness (site-wide)
     $org_data = [
       '@context' => 'https://schema.org',
       '@type' => ['Organization', 'LocalBusiness'],
@@ -95,35 +96,18 @@ class JsonLdGenerator {
       $type = $node->getType();
 
       // Product
-      $product_bundles = array_map('trim', explode(',', $config->get('product_bundles') ?: 'tovar'));
-      if ($config->get('enable_product') && in_array($type, $product_bundles)) {
-        $price_field = $config->get('field_price') ?: 'field_price';
-        $sku_field = $config->get('field_sku') ?: 'field_sku';
-        $image_field = $config->get('field_image') ?: 'field_image';
-
-        $price = '';
-        if ($node->hasField($price_field) && !$node->get($price_field)->isEmpty()) {
-          $price = $node->get($price_field)->value;
-        }
-
-        $sku = '';
-        if ($node->hasField($sku_field) && !$node->get($sku_field)->isEmpty()) {
-          $sku = $node->get($sku_field)->value;
-        }
-
-        $img_url = '';
-        if ($node->hasField($image_field) && !$node->get($image_field)->isEmpty()) {
-          $file = $node->get($image_field)->entity;
-          if ($file && method_exists($file, 'getFileUri')) {
-            $img_url = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
-          }
-        }
+      $product_bundle = $config->get('product_bundle') ?: 'tovar';
+      if ($config->get('enable_product') && $type === $product_bundle) {
+        $description = $this->textFieldValue($node, $config->get('product_field_description') ?: 'body');
+        $price = $this->textFieldValue($node, $config->get('product_field_price') ?: 'field_price');
+        $sku = $this->textFieldValue($node, $config->get('product_field_sku') ?: 'field_sku');
+        $img_url = $this->imageUrl($node, $config->get('product_field_image') ?: 'field_image');
 
         $product_data = [
           '@context' => 'https://schema.org',
           '@type' => 'Product',
           'name' => $node->label(),
-          'description' => !$node->get('body')->isEmpty() ? strip_tags($node->get('body')->summary ?: $node->get('body')->value) : $node->label(),
+          'description' => $description ?: $node->label(),
           'sku' => $sku ?: (string) $node->id(),
           'brand' => [
             '@type' => 'Brand',
@@ -145,8 +129,8 @@ class JsonLdGenerator {
       }
 
       // Article
-      $article_bundles = array_map('trim', explode(',', $config->get('article_bundles') ?: 'article'));
-      if ($config->get('enable_article') && in_array($type, $article_bundles)) {
+      $article_bundle = $config->get('article_bundle') ?: 'article';
+      if ($config->get('enable_article') && $type === $article_bundle) {
         $article_data = [
           '@context' => 'https://schema.org',
           '@type' => 'Article',
@@ -163,52 +147,128 @@ class JsonLdGenerator {
             '@id' => $current_url,
           ],
         ];
+
+        $author_name = $this->textFieldValue($node, $config->get('article_field_author'));
+        if ($author_name !== '') {
+          $article_data['author'] = [
+            '@type' => 'Person',
+            'name' => $author_name,
+          ];
+        }
+
+        $img_url = $this->imageUrl($node, $config->get('article_field_image'));
+        if ($img_url) {
+          $article_data['image'] = [$img_url];
+        }
+
         $jsonld[] = $article_data;
       }
     }
 
     // 4. BreadcrumbList
     if ($config->get('enable_breadcrumbs') && !$is_front) {
-      $breadcrumb_builder = \Drupal::service('breadcrumb');
-      $breadcrumb = $breadcrumb_builder->build($this->routeMatch);
-      $links = $breadcrumb->getLinks();
-
-      if (!empty($links)) {
-        $list_element = [];
-        $position = 1;
-        // Home link
-        $list_element[] = [
-          '@type' => 'ListItem',
-          'position' => $position++,
-          'name' => 'Главная',
-          'item' => $config->get('org_url') ?: 'https://www.stalerplast.ru/',
-        ];
-
-        foreach ($links as $link) {
-          $url = $link->getUrl();
-          if ($url->isRouted()) {
-            $url = $url->setAbsolute()->toString();
-          } else {
-            $url = $url->toString();
-          }
-          $list_element[] = [
-            '@type' => 'ListItem',
-            'position' => $position++,
-            'name' => $link->getText(),
-            'item' => $url,
-          ];
-        }
-
-        $breadcrumb_data = [
-          '@context' => 'https://schema.org',
-          '@type' => 'BreadcrumbList',
-          'itemListElement' => $list_element,
-        ];
+      $breadcrumb_data = $this->generateBreadcrumbs();
+      if ($breadcrumb_data) {
         $jsonld[] = $breadcrumb_data;
       }
     }
 
     return $jsonld;
+  }
+
+  /**
+   * Builds BreadcrumbList JSON-LD from the Drupal breadcrumb trail.
+   *
+   * «Главная» is always the first item; trail items without a URL
+   * (e.g. <nolink> menu section headers) keep an empty "item" value.
+   */
+  protected function generateBreadcrumbs() {
+    $breadcrumb = \Drupal::service('breadcrumb')->build($this->routeMatch);
+    $links = $breadcrumb->getLinks();
+
+    $front_url = Url::fromRoute('<front>')->setAbsolute()->toString();
+    $items = [
+      [
+        '@type' => 'ListItem',
+        'position' => 1,
+        'name' => 'Главная',
+        'item' => $front_url,
+      ],
+    ];
+
+    $position = 2;
+    foreach ($links as $link) {
+      $url = $link->getUrl();
+      if ($url->isRouted() && $url->getRouteName() === '<nolink>') {
+        $href = '';
+      }
+      elseif ($url->isRouted()) {
+        $href = $url->setAbsolute()->toString();
+      }
+      else {
+        $href = $url->toString();
+      }
+
+      // The home link is already item 1 — skip its duplicate.
+      if ($href !== '' && rtrim($href, '/') === rtrim($front_url, '/')) {
+        continue;
+      }
+
+      $name = trim(strip_tags((string) $link->getText()));
+      if ($name === '') {
+        continue;
+      }
+
+      $items[] = [
+        '@type' => 'ListItem',
+        'position' => $position++,
+        'name' => $name,
+        'item' => $href,
+      ];
+    }
+
+    if (count($items) < 2) {
+      return NULL;
+    }
+
+    return [
+      '@context' => 'https://schema.org',
+      '@type' => 'BreadcrumbList',
+      'itemListElement' => $items,
+    ];
+  }
+
+  /**
+   * Returns the stripped text value of a node field (summary preferred).
+   */
+  protected function textFieldValue($node, $field_name) {
+    if (!$field_name || !$node->hasField($field_name) || $node->get($field_name)->isEmpty()) {
+      return '';
+    }
+    $item = $node->get($field_name)->first();
+    if ($item === NULL) {
+      return '';
+    }
+    $value = (string) ($item->value ?? '');
+    $properties = $item->getFieldDefinition()->getFieldStorageDefinition()->getPropertyNames();
+    if (in_array('summary', $properties, TRUE) && !empty($item->summary)) {
+      $value = (string) $item->summary;
+    }
+    return trim(strip_tags($value));
+  }
+
+  /**
+   * Returns the absolute URL of a node file/image field, or empty string.
+   */
+  protected function imageUrl($node, $field_name) {
+    if (!$field_name || !$node->hasField($field_name) || $node->get($field_name)->isEmpty()) {
+      return '';
+    }
+    $file = $node->get($field_name)->entity;
+    if ($file && method_exists($file, 'getFileUri')) {
+      return \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
+    }
+    return '';
   }
 
   /**

@@ -34,8 +34,10 @@ drush en staler_jsonld -y
 
 ### Настройка и использование
 1. Перейдите в административное меню: **Конфигурация** ➔ **Поиск и метатеги** ➔ **Staler JSON-LD** (`/admin/config/search/staler-jsonld`).
-2. Заполните реквизиты компании, укажите машинные имена нод товаров и статей, а также настройте маппинг полей (`field_price`, `field_sku`, `field_image`).
-3. Сохраните настройки и очистите кэш: `drush cr`.
+2. Заполните реквизиты организации и шаблон поиска — эти блоки работают сразу, без привязки к материалам.
+3. Для товаров и статей выберите **тип материала из выпадающего списка** — после выбора список полей подстроится под этот тип (AJAX). Для каждого зафиксированного слота JSON-LD (описание, цена, артикул, изображение, автор) выберите из выпадающего списка **поле** выбранного типа, из которого брать данные.
+4. Хлебные крошки строятся автоматически по системной навигации Drupal: первый элемент — «Главная», дальше — элементы хлебной цепочки; пункты без ссылки (разделы-заглушки меню `<nolink>`) попадают в разметку с пустым значением `"item"`.
+5. Сохраните настройки и очистите кэш: `drush cr`.
 
 </details>
 
@@ -73,7 +75,9 @@ drush en staler_jsonld -y
 
 ### Configuration and Usage
 1. Go to administration menu: **Configuration** ➔ **Search and metadata** ➔ **Staler JSON-LD** (`/admin/config/search/staler-jsonld`).
-2. Fill in company details, specify product and article content type machine names, and field mappings (`field_price`, `field_sku`, `field_image`).
-3. Save configuration and clear cache: `drush cr`.
+2. Fill in the organization details and the search pattern — these blocks work out of the box, no content types involved.
+3. For products and articles pick a **content type from the dropdown** — the field lists below adjust to that type via AJAX. For every fixed JSON-LD slot (description, price, SKU, image, author) select the **field** of the chosen content type to read the data from.
+4. Breadcrumbs are built automatically from the Drupal breadcrumb trail: «Главная» (home) first, then each trail item; link-less items (menu section headers with `<nolink>`) are included with an empty `"item"` value.
+5. Save configuration and clear cache: `drush cr`.
 
 </details>

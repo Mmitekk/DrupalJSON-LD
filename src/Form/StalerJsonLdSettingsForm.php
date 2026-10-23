@@ -135,6 +135,16 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('search_url') ?? 'https://www.stalerplast.ru/search?search_query={search_term_string}',
     ];
 
+    $bundles = $this->nodeBundleOptions();
+    $input = $form_state->getUserInput();
+
+    // Selected bundle: AJAX user input first, then saved config, then fallback.
+    $product_bundle = $input['product']['product_bundle'] ?? $config->get('product_bundle');
+    if (!$product_bundle || !isset($bundles[$product_bundle])) {
+      $product_bundle = isset($bundles['tovar']) ? 'tovar' : array_key_first($bundles);
+    }
+    $product_fields = $this->nodeFieldOptions($product_bundle);
+
     $form['product'] = [
       '#type' => 'details',
       '#title' => $this->t('Product & Offer Settings (Nodes)'),
@@ -147,30 +157,57 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('enable_product') ?? TRUE,
     ];
 
-    $form['product']['product_bundles'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Product Content Type Machine Names (comma separated)'),
-      '#description' => $this->t('e.g. tovar, product'),
-      '#default_value' => $config->get('product_bundles') ?? 'tovar',
+    $form['product']['product_bundle'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Product content type'),
+      '#description' => $this->t('Field lists below are rebuilt for the selected content type.'),
+      '#options' => $bundles,
+      '#default_value' => $product_bundle,
+      '#ajax' => [
+        'callback' => '::updateProductFields',
+        'wrapper' => 'staler-jsonld-product-fields',
+        'event' => 'change',
+      ],
     ];
 
-    $form['product']['field_price'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Price Field Machine Name'),
-      '#default_value' => $config->get('field_price') ?? 'field_price',
+    $form['product']['fields'] = [
+      '#type' => 'container',
+      '#attributes' => ['id' => 'staler-jsonld-product-fields'],
     ];
 
-    $form['product']['field_sku'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('SKU Field Machine Name (optional)'),
-      '#default_value' => $config->get('field_sku') ?? 'field_sku',
+    $form['product']['fields']['product_field_description'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Description field (JSON-LD "description")'),
+      '#options' => $product_fields,
+      '#default_value' => $this->storedOption($product_fields, $config->get('product_field_description'), 'body'),
     ];
 
-    $form['product']['field_image'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Image Field Machine Name'),
-      '#default_value' => $config->get('field_image') ?? 'field_image',
+    $form['product']['fields']['product_field_price'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Price field (JSON-LD "price")'),
+      '#options' => $product_fields,
+      '#default_value' => $this->storedOption($product_fields, $config->get('product_field_price'), 'field_price'),
     ];
+
+    $form['product']['fields']['product_field_sku'] = [
+      '#type' => 'select',
+      '#title' => $this->t('SKU field (JSON-LD "sku")'),
+      '#options' => $product_fields,
+      '#default_value' => $this->storedOption($product_fields, $config->get('product_field_sku'), 'field_sku'),
+    ];
+
+    $form['product']['fields']['product_field_image'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image field (JSON-LD "image")'),
+      '#options' => $product_fields,
+      '#default_value' => $this->storedOption($product_fields, $config->get('product_field_image'), 'field_image'),
+    ];
+
+    $article_bundle = $input['article']['article_bundle'] ?? $config->get('article_bundle');
+    if (!$article_bundle || !isset($bundles[$article_bundle])) {
+      $article_bundle = isset($bundles['article']) ? 'article' : array_key_first($bundles);
+    }
+    $article_fields = $this->nodeFieldOptions($article_bundle);
 
     $form['article'] = [
       '#type' => 'details',
@@ -184,10 +221,36 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('enable_article') ?? TRUE,
     ];
 
-    $form['article']['article_bundles'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Article Content Type Machine Names (comma separated)'),
-      '#default_value' => $config->get('article_bundles') ?? 'article',
+    $form['article']['article_bundle'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Article content type'),
+      '#options' => $bundles,
+      '#default_value' => $article_bundle,
+      '#ajax' => [
+        'callback' => '::updateArticleFields',
+        'wrapper' => 'staler-jsonld-article-fields',
+        'event' => 'change',
+      ],
+    ];
+
+    $form['article']['fields'] = [
+      '#type' => 'container',
+      '#attributes' => ['id' => 'staler-jsonld-article-fields'],
+    ];
+
+    $form['article']['fields']['article_field_image'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image field (JSON-LD "image")'),
+      '#options' => $article_fields,
+      '#default_value' => $this->storedOption($article_fields, $config->get('article_field_image'), ''),
+    ];
+
+    $form['article']['fields']['article_field_author'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Author field (JSON-LD "author.name")'),
+      '#description' => $this->t('Text field with the author name. If empty, the organization name is used.'),
+      '#options' => $article_fields,
+      '#default_value' => $this->storedOption($article_fields, $config->get('article_field_author'), ''),
     ];
 
     $form['breadcrumbs'] = [
@@ -199,10 +262,62 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
     $form['breadcrumbs']['enable_breadcrumbs'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable BreadcrumbList JSON-LD automatically'),
+      '#description' => $this->t('Built from the Drupal breadcrumb trail: «Главная» first, then each trail item. Items without a link (e.g. menu section headers) are included with an empty "item" value.'),
       '#default_value' => $config->get('enable_breadcrumbs') ?? TRUE,
     ];
 
     return parent::buildForm($form, $form_state);
+  }
+
+  /**
+   * AJAX callback: rebuild product field selects for the chosen bundle.
+   */
+  public function updateProductFields(array &$form, FormStateInterface $form_state) {
+    return $form['product']['fields'];
+  }
+
+  /**
+   * AJAX callback: rebuild article field selects for the chosen bundle.
+   */
+  public function updateArticleFields(array &$form, FormStateInterface $form_state) {
+    return $form['article']['fields'];
+  }
+
+  /**
+   * Returns node type options keyed by machine name.
+   */
+  protected function nodeBundleOptions() {
+    $options = [];
+    foreach (\Drupal::service('entity_type.bundle.info')->getBundleInfo('node') as $machine => $info) {
+      $options[$machine] = $info['label'] . ' (' . $machine . ')';
+    }
+    return $options;
+  }
+
+  /**
+   * Returns field options (label + machine name) for a node bundle.
+   */
+  protected function nodeFieldOptions($bundle) {
+    $options = ['' => '- ' . $this->t('None') . ' -'];
+    if ($bundle) {
+      foreach (\Drupal::service('entity_field.manager')->getFieldDefinitions('node', $bundle) as $name => $definition) {
+        if ($definition->isInternal()) {
+          continue;
+        }
+        $options[$name] = $definition->getLabel() . ' (' . $name . ')';
+      }
+    }
+    return $options;
+  }
+
+  /**
+   * Picks a saved option if it exists in the list, otherwise a fallback.
+   */
+  protected function storedOption(array $options, $stored, $fallback) {
+    if ($stored && isset($options[$stored])) {
+      return $stored;
+    }
+    return ($fallback !== '' && isset($options[$fallback])) ? $fallback : '';
   }
 
   /**
@@ -214,9 +329,11 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
       'org_name', 'org_alt_name', 'org_url', 'org_logo', 'org_image',
       'org_phone', 'org_email', 'address_street', 'address_locality',
       'address_region', 'address_postal', 'address_country', 'opening_hours',
-      'enable_website', 'search_url', 'enable_product', 'product_bundles',
-      'field_price', 'field_sku', 'field_image', 'enable_article',
-      'article_bundles', 'enable_breadcrumbs'
+      'enable_website', 'search_url',
+      'enable_product', 'product_bundle', 'product_field_description',
+      'product_field_price', 'product_field_sku', 'product_field_image',
+      'enable_article', 'article_bundle', 'article_field_image',
+      'article_field_author', 'enable_breadcrumbs',
     ];
 
     foreach ($keys as $key) {
