@@ -32,7 +32,7 @@
     "extra": {
         "drupal": {
             "packageName": "mmitekk/staler-jsonld",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "security-coverage": {
                 "status": "not-covered",
                 "message": "Покрытие безопасности не проверяется для этого модуля / Security coverage is not checked for this module."
