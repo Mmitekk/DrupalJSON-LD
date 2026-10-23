@@ -1,15 +1,42 @@
 {
     "name": "mitekk/staler-jsonld",
-    "description": "Comprehensive Schema.org JSON-LD structured data injector for Drupal 10 and 11 (Organization, LocalBusiness, WebSite, Product, Article, Breadcrumbs).",
     "type": "drupal-module",
+    "description": "Comprehensive Schema.org JSON-LD structured data injector for Drupal 10 and 11 (Organization, LocalBusiness, WebSite, Product, Article, Breadcrumbs).",
+    "keywords": [
+        "drupal",
+        "seo",
+        "json-ld",
+        "schema.org",
+        "structured-data",
+        "microdata",
+        "product",
+        "article",
+        "breadcrumbs"
+    ],
+    "homepage": "https://github.com/Mmitekk/DrupalJSON-LD",
     "license": "GPL-2.0-or-later",
     "authors": [
         {
             "name": "Mmitekk",
-            "email": "mitish.n@yandex.ru"
+            "homepage": "https://github.com/Mmitekk",
+            "role": "Maintainer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/Mmitekk/DrupalJSON-LD/issues",
+        "source": "https://github.com/Mmitekk/DrupalJSON-LD"
+    },
     "require": {
         "drupal/core": "^10 || ^11"
+    },
+    "extra": {
+        "drupal": {
+            "packageName": "mitekk/staler-jsonld",
+            "version": "1.0.0",
+            "security-coverage": {
+                "status": "not-covered",
+                "message": "Покрытие безопасности не проверяется для этого модуля / Security coverage is not checked for this module."
+            }
+        }
     }
 }

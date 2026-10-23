@@ -15,27 +15,26 @@
 - 🎛 **Административная панель**: Удобная настройка всех параметров прямо из админки Drupal (`/admin/config/search/staler-jsonld`).
 
 ### Установка через Composer
-1. Добавьте репозиторий в ваш корневой `composer.json` (если модуль устанавливается из GitHub репозитория):
-```json
-"repositories": [
-    {
-        "type": "vcs",
-        "url": "https://github.com/Mmitekk/DrupalJSON-LD"
-    }
-]
+Выполните следующие команды в корне вашего проекта Drupal:
+
+1. Добавьте репозиторий через Composer CLI:
+```bash
+composer config repositories.drupal_json_ld vcs https://github.com/Mmitekk/DrupalJSON-LD
 ```
-2. Установите стабильную версию через Composer:
+
+2. Установите релизную версию модуля:
 ```bash
 composer require mitekk/staler-jsonld:^1.0
 ```
-3. Включите модуль через Drush или админку:
+
+3. Включите модуль с помощью Drush:
 ```bash
 drush en staler_jsonld -y
 ```
 
 ### Настройка и использование
 1. Перейдите в административное меню: **Конфигурация** ➔ **Поиск и метатеги** ➔ **Staler JSON-LD** (`/admin/config/search/staler-jsonld`).
-2. Заполните реквизиты компании, укажите машины нод товаров и статей, а также настройте маппинг полей (`field_price`, `field_sku`, `field_image`).
+2. Заполните реквизиты компании, укажите машинные имена нод товаров и статей, а также настройте маппинг полей (`field_price`, `field_sku`, `field_image`).
 3. Сохраните настройки и очистите кэш: `drush cr`.
 
 </details>
@@ -55,20 +54,19 @@ drush en staler_jsonld -y
 - 🎛 **Admin Panel**: Easy configuration of all parameters directly via Drupal admin (`/admin/config/search/staler-jsonld`).
 
 ### Installation via Composer
-1. Add the repository to your root `composer.json`:
-```json
-"repositories": [
-    {
-        "type": "vcs",
-        "url": "https://github.com/Mmitekk/DrupalJSON-LD"
-    }
-]
+Run the following commands in your Drupal project root:
+
+1. Add the repository via Composer CLI:
+```bash
+composer config repositories.drupal_json_ld vcs https://github.com/Mmitekk/DrupalJSON-LD
 ```
-2. Require the stable version via Composer:
+
+2. Require the release version via Composer:
 ```bash
 composer require mitekk/staler-jsonld:^1.0
 ```
-3. Enable the module via Drush or admin UI:
+
+3. Enable the module via Drush:
 ```bash
 drush en staler_jsonld -y
 ```
