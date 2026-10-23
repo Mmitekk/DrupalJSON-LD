@@ -35,7 +35,7 @@ drush en staler_jsonld -y
 ### Настройка и использование
 1. Перейдите в административное меню: **Конфигурация** ➔ **Поиск и метатеги** ➔ **Staler JSON-LD** (`/admin/config/search/staler-jsonld`).
 2. Заполните реквизиты организации и шаблон поиска — эти блоки работают сразу, без привязки к материалам.
-3. Для товаров и статей выберите **тип материала из выпадающего списка** — после выбора список полей подстроится под этот тип (AJAX). Для каждого зафиксированного слота JSON-LD (описание, цена, артикул, изображение, автор) выберите из выпадающего списка **поле** выбранного типа, из которого брать данные.
+3. Для товаров и статей у **каждого типа материала свой блок**: включите галочку у нужного типа и выберите из выпадающих списков его поля для зафиксированных слотов JSON-LD (описание, цена, артикул, изображение — для товаров; изображение, автор — для статей). Включить можно сколько угодно типов (лестницы, мешки, плёнки и т.д.) — все блоки отрисованы сразу, поля каждого блока соответствуют именно своему типу.
 4. Хлебные крошки строятся автоматически по системной навигации Drupal: первый элемент — «Главная», дальше — элементы хлебной цепочки; пункты без ссылки (разделы-заглушки меню `<nolink>`) попадают в разметку с пустым значением `"item"`.
 5. Сохраните настройки и очистите кэш: `drush cr`.
 
@@ -76,7 +76,7 @@ drush en staler_jsonld -y
 ### Configuration and Usage
 1. Go to administration menu: **Configuration** ➔ **Search and metadata** ➔ **Staler JSON-LD** (`/admin/config/search/staler-jsonld`).
 2. Fill in the organization details and the search pattern — these blocks work out of the box, no content types involved.
-3. For products and articles pick a **content type from the dropdown** — the field lists below adjust to that type via AJAX. For every fixed JSON-LD slot (description, price, SKU, image, author) select the **field** of the chosen content type to read the data from.
+3. For products and articles **every content type has its own block**: tick the checkbox next to the types that need markup and pick their fields from dropdowns for the fixed JSON-LD slots (description, price, SKU, image for products; image, author for articles). Any number of types can be enabled (ladders, bags, films, etc.) — all blocks are rendered at once, and each block lists the fields of its own type.
 4. Breadcrumbs are built automatically from the Drupal breadcrumb trail: «Главная» (home) first, then each trail item; link-less items (menu section headers with `<nolink>`) are included with an empty `"item"` value.
 5. Save configuration and clear cache: `drush cr`.
 

@@ -96,12 +96,13 @@ class JsonLdGenerator {
       $type = $node->getType();
 
       // Product
-      $product_bundle = $config->get('product_bundle') ?: 'tovar';
-      if ($config->get('enable_product') && $type === $product_bundle) {
-        $description = $this->textFieldValue($node, $config->get('product_field_description') ?: 'body');
-        $price = $this->textFieldValue($node, $config->get('product_field_price') ?: 'field_price');
-        $sku = $this->textFieldValue($node, $config->get('product_field_sku') ?: 'field_sku');
-        $img_url = $this->imageUrl($node, $config->get('product_field_image') ?: 'field_image');
+      $product_mappings = $config->get('product_mappings') ?: [];
+      $product_mapping = $product_mappings[$type] ?? NULL;
+      if ($config->get('enable_product') && is_array($product_mapping) && !empty($product_mapping['enabled'])) {
+        $description = $this->textFieldValue($node, $product_mapping['description'] ?? '');
+        $price = $this->textFieldValue($node, $product_mapping['price'] ?? '');
+        $sku = $this->textFieldValue($node, $product_mapping['sku'] ?? '');
+        $img_url = $this->imageUrl($node, $product_mapping['image'] ?? '');
 
         $product_data = [
           '@context' => 'https://schema.org',
@@ -129,8 +130,9 @@ class JsonLdGenerator {
       }
 
       // Article
-      $article_bundle = $config->get('article_bundle') ?: 'article';
-      if ($config->get('enable_article') && $type === $article_bundle) {
+      $article_mappings = $config->get('article_mappings') ?: [];
+      $article_mapping = $article_mappings[$type] ?? NULL;
+      if ($config->get('enable_article') && is_array($article_mapping) && !empty($article_mapping['enabled'])) {
         $article_data = [
           '@context' => 'https://schema.org',
           '@type' => 'Article',
@@ -148,7 +150,7 @@ class JsonLdGenerator {
           ],
         ];
 
-        $author_name = $this->textFieldValue($node, $config->get('article_field_author'));
+        $author_name = $this->textFieldValue($node, $article_mapping['author'] ?? '');
         if ($author_name !== '') {
           $article_data['author'] = [
             '@type' => 'Person',
@@ -156,7 +158,7 @@ class JsonLdGenerator {
           ];
         }
 
-        $img_url = $this->imageUrl($node, $config->get('article_field_image'));
+        $img_url = $this->imageUrl($node, $article_mapping['image'] ?? '');
         if ($img_url) {
           $article_data['image'] = [$img_url];
         }
