@@ -221,12 +221,17 @@ class JsonLdGenerator {
         continue;
       }
 
-      $items[] = [
+      // Elements without a URL (current page, <nolink> sections) omit the
+      // "item" property entirely — an empty string breaks validators.
+      $list_item = [
         '@type' => 'ListItem',
         'position' => $position++,
         'name' => $name,
-        'item' => $href,
       ];
+      if ($href !== '') {
+        $list_item['item'] = $href;
+      }
+      $items[] = $list_item;
     }
 
     if (count($items) < 2) {

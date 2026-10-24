@@ -36,7 +36,7 @@ drush en staler_jsonld -y
 1. Перейдите в административное меню: **Конфигурация** ➔ **Поиск и метатеги** ➔ **Staler JSON-LD** (`/admin/config/search/staler-jsonld`).
 2. Заполните реквизиты организации и шаблон поиска — эти блоки работают сразу, без привязки к материалам.
 3. Для товаров и статей у **каждого типа материала свой блок**: включите галочку у нужного типа и выберите из выпадающих списков его поля для зафиксированных слотов JSON-LD (описание, цена, артикул, изображение — для товаров; изображение, автор — для статей). Включить можно сколько угодно типов (лестницы, мешки, плёнки и т.д.) — все блоки отрисованы сразу, поля каждого блока соответствуют именно своему типу.
-4. Хлебные крошки строятся автоматически по системной навигации Drupal: первый элемент — «Главная», дальше — элементы хлебной цепочки; пункты без ссылки (разделы-заглушки меню `<nolink>`) попадают в разметку с пустым значением `"item"`.
+4. Хлебные крошки строятся автоматически по системной навигации Drupal: первый элемент — «Главная», дальше — элементы хлебной цепочки; у элементов без ссылки (текущая страница, разделы-заглушки меню `<nolink>`) свойство `"item"` опускается целиком, как рекомендуют Google и Яндекс.
 5. Сохраните настройки и очистите кэш: `drush cr`.
 
 </details>
@@ -77,7 +77,7 @@ drush en staler_jsonld -y
 1. Go to administration menu: **Configuration** ➔ **Search and metadata** ➔ **Staler JSON-LD** (`/admin/config/search/staler-jsonld`).
 2. Fill in the organization details and the search pattern — these blocks work out of the box, no content types involved.
 3. For products and articles **every content type has its own block**: tick the checkbox next to the types that need markup and pick their fields from dropdowns for the fixed JSON-LD slots (description, price, SKU, image for products; image, author for articles). Any number of types can be enabled (ladders, bags, films, etc.) — all blocks are rendered at once, and each block lists the fields of its own type.
-4. Breadcrumbs are built automatically from the Drupal breadcrumb trail: «Главная» (home) first, then each trail item; link-less items (menu section headers with `<nolink>`) are included with an empty `"item"` value.
+4. Breadcrumbs are built automatically from the Drupal breadcrumb trail: «Главная» (home) first, then each trail item; for link-less elements (the current page, menu section headers with `<nolink>`) the `"item"` property is omitted entirely, as recommended by Google and Yandex.
 5. Save configuration and clear cache: `drush cr`.
 
 </details>

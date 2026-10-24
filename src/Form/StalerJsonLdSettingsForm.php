@@ -269,7 +269,7 @@ class StalerJsonLdSettingsForm extends ConfigFormBase {
     $form['breadcrumbs']['enable_breadcrumbs'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable BreadcrumbList JSON-LD automatically'),
-      '#description' => $this->t('Built from the Drupal breadcrumb trail: «Главная» first, then each trail item. Items without a link (e.g. menu section headers) are included with an empty "item" value.'),
+      '#description' => $this->t('Built from the Drupal breadcrumb trail: «Главная» first, then each trail item. Link-less elements (current page, menu section headers) omit the "item" property.'),
       '#default_value' => $config->get('enable_breadcrumbs') ?? TRUE,
     ];
 
