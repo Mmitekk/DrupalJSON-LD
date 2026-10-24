@@ -3,7 +3,7 @@ type: module
 description: 'Comprehensive Schema.org JSON-LD structured data injector for Drupal 10 and 11 (Organization, LocalBusiness, WebSite, Product, Article, Breadcrumbs).'
 core_version_requirement: ^10 || ^11
 package: SEO
-version: '1.2.1'
+version: '1.2.2'
 configure: staler_jsonld.settings
 dependencies:
   - drupal:system

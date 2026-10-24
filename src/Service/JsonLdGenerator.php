@@ -216,7 +216,7 @@ class JsonLdGenerator {
         continue;
       }
 
-      $name = trim(strip_tags((string) $link->getText()));
+      $name = trim(strip_tags((string) $this->linkText($link)));
       if ($name === '') {
         continue;
       }
@@ -238,6 +238,17 @@ class JsonLdGenerator {
       '@type' => 'BreadcrumbList',
       'itemListElement' => $items,
     ];
+  }
+
+  /**
+   * Returns a breadcrumb link text as a string (render arrays allowed).
+   */
+  protected function linkText($link) {
+    $text = $link->getText();
+    if (is_array($text)) {
+      $text = (string) \Drupal::service('renderer')->render($text);
+    }
+    return $text;
   }
 
   /**
